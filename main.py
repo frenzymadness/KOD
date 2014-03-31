@@ -2,15 +2,29 @@
 
 # import modulu
 import re
+import time
 
-# Regularni vyraz  pro parsing radku z logu
-parser = re.compile('(\d+\.\d+\.\d+\.\d+) - - (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
+# Regularni vyraz  pro parsing radku z logu (je mozno zvolit ztratovy, kde se nebere vse v potaz)
+#parser = re.compile('(\d+\.\d+\.\d+\.\d+) - - (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
+# nebo bezztratovy, kde se bere v potaz vse
+parser = re.compile('(\d+\.\d+\.\d+\.\d+) (- -) (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
 
 # Pripona pro komprimovane soubory
 cmp_suffix = '.cmp'
 dcmp_suffix = '.dcmp'
 
 
+def timing(f):
+    def wrap(*args):
+        time1 = time.time()
+        ret = f(*args)
+        time2 = time.time()
+        print '%s of %s took %0.3f ms' % (f.func_name, args[0], (time2-time1)*1000.0)
+        return ret
+    return wrap
+
+
+@timing
 def compress(logfile):
 
     # pomocna pole
@@ -38,7 +52,7 @@ def compress(logfile):
             if len(part_content) > 4:
                 # pokud cast v hash tabulce, pouzijeme hash, jinak ji
                 # do hash tabulky vlozime a vytvorime pro ni hash
-                if part_content in hash_table.keys():
+                if part_content in hash_table:
                     output[-1].append(hash_table[part_content])
                 else:
                     hash_table[part_content] = "%d#%d" % (row_num, part_num)
@@ -50,9 +64,10 @@ def compress(logfile):
     #ulozeni vystupu
     with open(logfile+cmp_suffix, 'w') as f:
         for record in output:
-            f.write(" ".join(record) + '\n')
+            f.write("|".join(record) + '\n')
 
 
+@timing
 def decompress(compressed_file):
 
     # jmeno originalu
@@ -68,7 +83,7 @@ def decompress(compressed_file):
     # nacteni vstupnich dat do pole
     with open(compressed_file, 'r') as f:
         for line in f:
-            compressed.append(line.split())
+            compressed.append(line.split('|'))
 
     # Samotna dekomprese
     # Pro kazdy radek pridame zaznam do vysledku
@@ -79,7 +94,7 @@ def decompress(compressed_file):
             # Pokud je cast komprimovana, zamenime ji za dekomprimovany zaznam
             if parser.match(part_content) is not None:
                 row, part = part_content.split('#')
-                output[-1].append(compressed[row][part])
+                output[-1].append(compressed[int(row)][int(part)])
             # pokud neni komprimovana, jen ji vlozime do vystupu
             else:
                 output[-1].append(part_content)
@@ -87,18 +102,18 @@ def decompress(compressed_file):
     #ulozeni vystupu
     with open(name+dcmp_suffix, 'w') as f:
         for record in output:
-            f.write(" ".join(record) + '\n')
+            f.write(" ".join(record))
 
 if __name__ == '__main__':
     compress('10.log')
     compress('100.log')
-    #compress('1000.log')
-    #compress('10000.log')
-    #compress('100000.log')
-    #compress('200000.log')
-    decompress('10.log')
-    decompress('100.log')
-    #decompress('1000.log')
-    #decompress('10000.log')
-    #decompress('100000.log')
-    #decompress('200000.log')
+    compress('1000.log')
+    compress('10000.log')
+    compress('100000.log')
+    compress('200000.log')
+    decompress('10.log.cmp')
+    decompress('100.log.cmp')
+    decompress('1000.log.cmp')
+    decompress('10000.log.cmp')
+    decompress('100000.log.cmp')
+    decompress('200000.log.cmp')

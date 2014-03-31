@@ -45,12 +45,12 @@ def compress(logfile):
     #ulozeni vystupu
     with open(logfile+cmp_suffix, 'w') as f:
         for record in original:
-            f.write(" ".join(record))
+            f.write(" ".join(record) + '\n')
 
 if __name__ == '__main__':
     compress('10.log')
     compress('100.log')
     compress('1000.log')
-    compress('10000.log')
-    compress('100000.log')
-    compress('200000.log')
+    #compress('10000.log')
+    #compress('100000.log')
+    #compress('200000.log')

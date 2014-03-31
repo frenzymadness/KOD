@@ -4,7 +4,7 @@
 import re
 
 # Regularni vyraz  pro parsing radku z logu
-parser = re.compile('(\d+\.\d+\.\d+\.\d+) - - (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+")')
+parser = re.compile('(\d+\.\d+\.\d+\.\d+) - - (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
 
 # Pripona pro komprimovane soubory
 cmp_suffix = '.cmp'
@@ -21,7 +21,12 @@ def compress(logfile):
     # nacteni vstupnich dat do pole
     with open(logfile, 'r') as f:
         for line in f:
-            original.append(parser.match(line).groups())
+            try:
+                original.append(parser.match(line).groups())
+            except:
+                print "Error: No matching line founded"
+                print line
+                original.append([line])
 
     # Samotna komprese
     # Pro kazdy radek pridame zaznam do vysledku
@@ -44,13 +49,13 @@ def compress(logfile):
 
     #ulozeni vystupu
     with open(logfile+cmp_suffix, 'w') as f:
-        for record in original:
+        for record in output:
             f.write(" ".join(record) + '\n')
 
 if __name__ == '__main__':
     compress('10.log')
     compress('100.log')
-    compress('1000.log')
+    #compress('1000.log')
     #compress('10000.log')
     #compress('100000.log')
     #compress('200000.log')

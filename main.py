@@ -6,9 +6,9 @@ import time
 import os
 
 # Regularni vyraz  pro parsing radku z logu (je mozno zvolit ztratovy, kde se nebere vse v potaz)
-#parser = re.compile('(\d+\.\d+\.\d+\.\d+) - - (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
+parser = re.compile('(\d+\.\d+\.\d+\.\d+) - - (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") .*')
 # nebo bezztratovy, kde se bere v potaz vse
-parser = re.compile('(\d+\.\d+\.\d+\.\d+) (- -) (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
+# parser = re.compile('(\d+\.\d+\.\d+\.\d+) (- -) (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
 
 # Pripona pro komprimovane soubory
 cmp_suffix = '.cmp'
@@ -51,7 +51,7 @@ def compress(logfile):
     for row_num, row_content in enumerate(original):
         output.append([])
         # Pro kazdou cast jednoho zaznamu
-        for part_num, part_content in enumerate(row_content):
+        for part_content in row_content:
             # Pokud je cast vetsi nez ctyri znaky, provedeme kompresi
             if len(part_content) > 4:
                 # pokud cast v hash tabulce, pouzijeme hash, jinak ji
@@ -59,7 +59,7 @@ def compress(logfile):
                 if part_content in hash_table:
                     output[-1].append(hash_table[part_content])
                 else:
-                    hash_table[part_content] = "%d#%d" % (row_num, part_num)
+                    hash_table[part_content] = "#%d" % (row_num)
                     output[-1].append(part_content)
             # casti mensi nez urcity pocet znaku ignorujeme a jen vkladame do vysledku
             else:
@@ -83,11 +83,11 @@ def decompress(compressed_file):
     # jmeno originalu
     name = compressed_file.rstrip(cmp_suffix)
 
-    # velikost pred dekompresi
+    # velikost originalu
     orig_size = os.path.getsize(name)
 
     # vyhledavani hashu
-    parser = re.compile('\d+#\d+')
+    parser = re.compile('#\d+')
 
     # pomocna pole
     compressed = []
@@ -103,10 +103,10 @@ def decompress(compressed_file):
     for row_content in compressed:
         output.append([])
         # Pro kazdou cast jednoho zaznamu
-        for part_content in row_content:
+        for part, part_content in enumerate(row_content):
             # Pokud je cast komprimovana, zamenime ji za dekomprimovany zaznam
             if parser.match(part_content) is not None:
-                row, part = part_content.split('#')
+                row = part_content.lstrip('#')
                 output[-1].append(compressed[int(row)][int(part)])
             # pokud neni komprimovana, jen ji vlozime do vystupu
             else:
@@ -117,9 +117,10 @@ def decompress(compressed_file):
         for record in output:
             f.write(" ".join(record))
 
-    # komprimovana velikost
+    # dekomprimovana velikost
     dcmp_size = os.path.getsize(name+dcmp_suffix)
 
+    # informace o velikosti
     print 'Original size: %d decompressed size: %d difference: %.2f' % (orig_size, dcmp_size, dcmp_size - orig_size)
 
 if __name__ == '__main__':

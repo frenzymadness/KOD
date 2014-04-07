@@ -3,6 +3,7 @@
 # import modulu
 import re
 import time
+import os
 
 # Regularni vyraz  pro parsing radku z logu (je mozno zvolit ztratovy, kde se nebere vse v potaz)
 #parser = re.compile('(\d+\.\d+\.\d+\.\d+) - - (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
@@ -26,6 +27,9 @@ def timing(f):
 
 @timing
 def compress(logfile):
+
+    # velikost pred kompresi
+    orig_size = os.path.getsize(logfile)
 
     # pomocna pole
     original = []
@@ -66,12 +70,21 @@ def compress(logfile):
         for record in output:
             f.write("|".join(record) + '\n')
 
+    # komprimovana velikost
+    cmp_size = os.path.getsize(logfile+cmp_suffix)
+    prc_size = 100 - cmp_size / float(orig_size / 100)
+
+    print 'Original size: %d compressed size: %d compress: %.2f' % (orig_size, cmp_size, prc_size)
+
 
 @timing
 def decompress(compressed_file):
 
     # jmeno originalu
     name = compressed_file.rstrip(cmp_suffix)
+
+    # velikost pred dekompresi
+    orig_size = os.path.getsize(name)
 
     # vyhledavani hashu
     parser = re.compile('\d+#\d+')
@@ -103,6 +116,11 @@ def decompress(compressed_file):
     with open(name+dcmp_suffix, 'w') as f:
         for record in output:
             f.write(" ".join(record))
+
+    # komprimovana velikost
+    dcmp_size = os.path.getsize(name+dcmp_suffix)
+
+    print 'Original size: %d decompressed size: %d difference: %.2f' % (orig_size, dcmp_size, dcmp_size - orig_size)
 
 if __name__ == '__main__':
     compress('10.log')

@@ -4,11 +4,12 @@
 import re
 import time
 import os
+import gzip
 
 # Regularni vyraz  pro parsing radku z logu (je mozno zvolit ztratovy, kde se nebere vse v potaz)
-#parser = re.compile('(\d+\.\d+\.\d+\.\d+) - - (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
+parser = re.compile('(\d+\.\d+\.\d+\.\d+) - - (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
 # nebo bezztratovy, kde se bere v potaz vse
-parser = re.compile('(\d+\.\d+\.\d+\.\d+) (- -) (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
+#parser = re.compile('(\d+\.\d+\.\d+\.\d+) (- -) (\[.+ .+\]) (".+") (\d+ \d+) (".+") (".+") (.*)')
 
 # Pripona pro komprimovane soubory
 cmp_suffix = '.cmp'
@@ -66,7 +67,7 @@ def compress(logfile):
                 output[-1].append(part_content)
 
     #ulozeni vystupu
-    with open(logfile+cmp_suffix, 'w') as f:
+    with gzip.open(logfile+cmp_suffix, 'w') as f:
         for record in output:
             f.write("|".join(record) + '\n')
 
@@ -94,7 +95,7 @@ def decompress(compressed_file):
     output = []
 
     # nacteni vstupnich dat do pole
-    with open(compressed_file, 'r') as f:
+    with gzip.open(compressed_file, 'r') as f:
         for line in f:
             compressed.append(line.split('|'))
 

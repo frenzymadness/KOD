@@ -83,7 +83,7 @@ def decompress(compressed_file):
     # jmeno originalu
     name = compressed_file.rstrip(cmp_suffix)
 
-    # velikost pred dekompresi
+    # velikost originalu
     orig_size = os.path.getsize(name)
 
     # vyhledavani hashu
@@ -117,7 +117,7 @@ def decompress(compressed_file):
         for record in output:
             f.write(" ".join(record))
 
-    # komprimovana velikost
+    # dekomprimovana velikost
     dcmp_size = os.path.getsize(name+dcmp_suffix)
 
     print 'Original size: %d decompressed size: %d difference: %.2f' % (orig_size, dcmp_size, dcmp_size - orig_size)

@@ -26,6 +26,10 @@ def timing(f):
     return wrap
 
 
+def baseN(num, b, numerals="0123456789abcdefghijklmnopqrstuvwxyz"):
+    return ((num == 0) and "0") or (baseN(num // b, b).lstrip("0") + numerals[num % b])
+
+
 @timing
 def compress(logfile):
 
@@ -60,7 +64,7 @@ def compress(logfile):
                 if part_content in hash_table:
                     output[-1].append(hash_table[part_content])
                 else:
-                    hash_table[part_content] = "#%s" % (hex(row_num)[2:])
+                    hash_table[part_content] = "#%s" % (baseN(row_num, 36))
                     output[-1].append(part_content)
             # casti mensi nez urcity pocet znaku ignorujeme a jen vkladame do vysledku
             else:
@@ -108,7 +112,7 @@ def decompress(compressed_file):
             # Pokud je cast komprimovana, zamenime ji za dekomprimovany zaznam
             if parser.match(part_content) is not None:
                 row = part_content.lstrip('#')
-                output[-1].append(compressed[int(row, 16)][int(part)])
+                output[-1].append(compressed[int(row, 36)][int(part)])
             # pokud neni komprimovana, jen ji vlozime do vystupu
             else:
                 output[-1].append(part_content)
